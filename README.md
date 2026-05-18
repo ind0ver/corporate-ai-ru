@@ -13,7 +13,7 @@ RAG-приложение для консультации с корпоратив
 Если ответа нет в контексте — скажи об этом прямо.*
 
 ### Один из загруженных документов (документация к платформе PIX RPA):
-<img width="666" height="693" alt="2026-05-18_13-31-09" src="https://github.com/user-attachments/assets/10b5f45f-5c14-42a0-8a26-90464c63e234" />
+<img width="444" height="462" alt="2026-05-18_13-31-09" src="https://github.com/user-attachments/assets/10b5f45f-5c14-42a0-8a26-90464c63e234" />
 
 ### Ответ AI-ассистента (gemma4:e4b):
 <img width="1342" height="803" alt="2026-05-18_13-19-55-s" src="https://github.com/user-attachments/assets/02d38549-adb4-4156-ba7c-0bb0ad6e6f4b" />
