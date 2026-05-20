@@ -27,7 +27,7 @@ async def generate_stream(
         "stream": True
     }
 
-    async with httpx.AsyncClient(timeout=5) as client:
+    async with httpx.AsyncClient(timeout=180) as client:
         async with client.stream(
             "POST",
             f"{LLM_API_URL}/v1/chat/completions",
