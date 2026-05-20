@@ -14,17 +14,20 @@ from backend.services.rag_service import ask_stream
 from backend.services.session_service import (
     get_users, register_user, get_user_name,
     get_sessions, register_session,
-    load_history,
+    load_history, close_redis_pool
 )
 from backend.startup import run_startup_checks, StartupError
 from backend.health import router as health_router
 from backend.services.llm_service import get_available_models
+from rag.retrieval import close_qdrant
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await run_startup_checks()
     yield
+    await close_redis_pool()
+    await close_qdrant()
     print("👋 Сервер останавливается")
 
 
@@ -89,6 +92,9 @@ async def chat_stream(chat_request: ChatRequest):
             async for token in ask_stream(chat_request):
                 yield f"data: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"
         except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"STREAM ERROR: {type(e).__name__}: {e}")
             yield f"data: {json.dumps({'error': str(e)}, ensure_ascii=False)}\n\n"
         finally:
             yield "data: [DONE]\n\n"
