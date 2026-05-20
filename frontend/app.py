@@ -130,8 +130,6 @@ def _restore_last_active() -> None:
 def init_session_state() -> None:
     """
     Инициализация при первом запуске вкладки браузера.
-    Streamlit вызывает весь скрипт при каждом взаимодействии —
-    проверяем 'not in' перед каждым присвоением.
     """
     if "available_models" not in st.session_state:
         st.session_state.available_models = fetch_available_models()
@@ -271,7 +269,7 @@ def render_sidebar() -> None:
             st.rerun()
 
         # ── Пользователь ──────────────────────────────────────────────────
-        st.divider()
+        # st.divider()
 
         users = st.session_state.users_cache
         user_ids   = [u["user_id"] for u in users]
@@ -323,7 +321,7 @@ def render_sidebar() -> None:
             if selected_sid != st.session_state.active_session_id:
                 action_select_session(selected_sid)
                 st.rerun()
-
+        
 # ---------------------------------------------------------------------------
 # Chat
 # ---------------------------------------------------------------------------
