@@ -53,8 +53,14 @@ This will open the UI in the browser.
 
 **7.** Talk to the LLM about the PDF documents in the /docs folder.
 
+**Тестовые вопросы:**
+- Какая версия .NET нужна для работы PIX Studio?
+- В какой компании ты работаешь?
+
 ## Использование с Docker
-Рекомендуемые контейнеры:
- - qdrant/qdrant:latest
- - redis:latest
+Используемые контейнеры:
+ - qdrant/qdrant:v1.18.0
+ - redis:8.6.3
+
+Для vLLM:
  - vllm/vllm-openai:latest
