@@ -1,10 +1,10 @@
 import logging
-from backend.config import MODEL, SYSTEM_PROMPT
+from backend.config import SYSTEM_PROMPT
 from backend.schemas import ChatRequest
 from backend.services.llm_service import generate_stream
 from backend.services.session_service import load_history, save_turn
 from backend.services.prompt_builder import build_prompt
-from rag.retrieval import search_docs
+from backend.rag.retrieval import search_docs
 
 
 logger = logging.getLogger(__name__)

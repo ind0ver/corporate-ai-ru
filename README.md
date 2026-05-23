@@ -36,7 +36,7 @@ pip install -r requirements.txt
 
 **4.** Run
 ```bash
-python -m rag.ingest
+python -m backend.rag.ingest
 ```
 to ingest files and create a qdrant collection (vector DB).
 

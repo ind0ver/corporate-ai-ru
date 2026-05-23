@@ -1,11 +1,12 @@
 import time
 import httpx
-import redis.asyncio as aioredis
-from qdrant_client import AsyncQdrantClient
 from fastapi import APIRouter
 from pydantic import BaseModel
+from typing import List, Dict, Any
+from backend.config import LLM_API_URL, MODEL
+from backend.services.session_service import get_redis
+from backend.rag.retrieval import get_qdrant
 
-from backend.config import REDIS_URL, QDRANT_HOST, QDRANT_PORT, LLM_API_URL
 
 router = APIRouter(tags=["health"])
 
@@ -28,7 +29,7 @@ class HealthResponse(BaseModel):
 async def _probe_redis() -> DependencyStatus:
     t = time.monotonic()
     try:
-        client = aioredis.from_url(REDIS_URL, socket_connect_timeout=2)
+        client = get_redis()
         await client.ping()
         await client.aclose()
         return DependencyStatus(status="ok", latency_ms=round((time.monotonic() - t) * 1000, 2))
@@ -39,7 +40,7 @@ async def _probe_redis() -> DependencyStatus:
 async def _probe_qdrant() -> DependencyStatus:
     t = time.monotonic()
     try:
-        client = AsyncQdrantClient(host=QDRANT_HOST, port=QDRANT_PORT, timeout=2)
+        client = get_qdrant()
         await client.get_collections()
         await client.close()
         return DependencyStatus(status="ok", latency_ms=round((time.monotonic() - t) * 1000, 2))
@@ -47,16 +48,30 @@ async def _probe_qdrant() -> DependencyStatus:
         return DependencyStatus(status="error", latency_ms=0, detail=str(e))
 
 
-async def _probe_ollama() -> DependencyStatus:
+async def _check_openai_compatible() -> None:
     t = time.monotonic()
     try:
-        async with httpx.AsyncClient(timeout=3) as client:
-            r = await client.get(f"{LLM_API_URL}/api/tags")
+        async with httpx.AsyncClient(timeout=5) as client:
+            # Запрос к эндпоинту /v1/models для OpenAI‑совместимых API
+            r = await client.get(f"{LLM_API_URL}/v1/models")
             r.raise_for_status()
+
+            # Парсим JSON и извлекаем список моделей
+            response_data: Dict[str, Any] = r.json()
+            models_data: List[Dict[str, Any]] = response_data.get("data", [])
+
+            # Извлекаем имена моделей из поля "id" каждой записи
+            models: List[str] = [m["id"] for m in models_data]
+
+            if MODEL not in models:
+                # Не критично — предупреждаем, но не падаем
+                print(f"⚠️  OpenAI‑compatible API: модель '{MODEL}' не найдена. Доступны: {models}")
+            else:
+                print(f"✅ OpenAI‑compatible API: OK (модель '{MODEL}' найдена)")
         return DependencyStatus(status="ok", latency_ms=round((time.monotonic() - t) * 1000, 2))
     except Exception as e:
-        return DependencyStatus(status="error", latency_ms=0, detail=str(e))
-
+        raise DependencyStatus(status="error", latency_ms=0, detail=f"OpenAI‑compatible API недоступна ({LLM_API_URL}): {e}")
+    
 
 @router.get("/health", response_model=HealthResponse)
 async def liveness():
@@ -82,7 +97,7 @@ async def readiness():
     deps = {
         "redis":  await _probe_redis(),
         "qdrant": await _probe_qdrant(),
-        "ollama": await _probe_ollama(),
+        "llm": await _check_openai_compatible(),
     }
 
     all_ok = all(d.status == "ok" for d in deps.values())

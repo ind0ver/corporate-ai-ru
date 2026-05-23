@@ -4,9 +4,11 @@ import os
 load_dotenv()
 
 # LLM
-LLM_API_URL = os.getenv("LLM_API_URL", "http://localhost:11434")
+LLM_API_URL = os.getenv("LLM_API_URL", "http://localhost:11434") # Ollama
+# LLM_API_URL = os.getenv("LLM_API_URL", "http://localhost:8002") # vLLM
+
 MODEL = os.getenv("MODEL", "gemma4:e4b")
-SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", "Ты - полезный корпоративный ассистент.")
+SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", "Ты - полезный корпоративный ассистент компании SideWays.")
 
 # Qdrant
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")

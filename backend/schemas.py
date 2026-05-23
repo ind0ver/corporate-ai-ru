@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 
 
@@ -46,5 +46,11 @@ class SessionInfo(BaseModel):
     session_id: str
 
 
-class CreateSessionRequest(BaseModel):
-    pass  # session_id генерируется на сервере
+# ---------------------------------------------------------------------------
+# Config
+# ---------------------------------------------------------------------------
+
+class ConfigResponse(BaseModel):
+    default_model: str = Field(description="Default LLM model name")
+    default_system_prompt: str = Field(description="Default system prompt for chat")
+

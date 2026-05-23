@@ -2,29 +2,29 @@ import uuid
 import json
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 
 from backend.schemas import (
-    ChatRequest, ChatResponse,
+    ChatRequest,
     UserInfo, CreateUserRequest,
-    SessionInfo, CreateSessionRequest,
+    SessionInfo, ConfigResponse
 )
 from backend.services.rag_service import ask_stream
 from backend.services.session_service import (
-    get_users, register_user, get_user_name,
+    get_users, register_user,
     get_sessions, register_session,
     load_history, close_redis_pool
 )
-from backend.startup import run_startup_checks, StartupError
 from backend.health import router as health_router
 from backend.services.llm_service import get_available_models
-from rag.retrieval import close_qdrant
+from backend.rag.retrieval import close_qdrant
+from backend.config import MODEL, SYSTEM_PROMPT
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await run_startup_checks()
+    print("🚀 Starting server...")
     yield
     await close_redis_pool()
     await close_qdrant()
@@ -116,3 +116,11 @@ async def chat_stream(chat_request: ChatRequest):
 @app.get("/models")
 async def get_models():
     return get_available_models()
+
+
+@app.get("/config", response_model=ConfigResponse)
+async def get_config():
+    return ConfigResponse(
+        default_model=MODEL,
+        default_system_prompt=SYSTEM_PROMPT,
+    )

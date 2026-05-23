@@ -1,11 +1,9 @@
 import json
 import random
 import string
-
 import requests
 import streamlit as st
-
-from backend.config import MODEL, SYSTEM_PROMPT, BACKEND_URL
+from config import BACKEND_URL
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -17,21 +15,31 @@ def random_name(length: int = 8) -> str:
     return "".join(random.choices(chars, k=length))
 
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=600)
 def fetch_available_models() -> list[str]:
-    """Запрашивает список моделей у backend. Кешируется на 60 секунд."""
+    """Запрашивает список моделей у backend. Кешируется на ttl секунд."""
     try:
         r = requests.get(f"{BACKEND_URL}/models", timeout=5)
         r.raise_for_status()
         models = r.json()
-        return models if isinstance(models, list) and models else [MODEL]
+        return models if isinstance(models, list) and models else []
     except Exception as e:
         st.warning(f"Не удалось получить список моделей: {e}")
-        return [MODEL]
+        return []
+    
+
+@st.cache_data(ttl=300)
+def fetch_defaults() -> dict:
+    try:
+        r = requests.get(f"{BACKEND_URL}/config", timeout=5)
+        r.raise_for_status()
+        return r.json()
+    except Exception:
+        return {"default_model": "", "default_system_prompt": ""}
 
 
-def resolve_default_model(model: str, available: list[str]) -> str:
-    return model if model in available else available[0]
+def resolve_default_model(available_models: list[str]) -> str:
+    return available_models[0] if available_models else ""
 
 # ---------------------------------------------------------------------------
 # API helpers
@@ -134,16 +142,17 @@ def init_session_state() -> None:
     if "available_models" not in st.session_state:
         st.session_state.available_models = fetch_available_models()
 
+    if "defaults" not in st.session_state:
+        st.session_state.defaults = fetch_defaults()
+
     if "model" not in st.session_state:
-        st.session_state.model = resolve_default_model(
-            MODEL, st.session_state.available_models
-        )
+        st.session_state.model = st.session_state.defaults.get("default_model", "")
 
     if "temperature" not in st.session_state:
         st.session_state.temperature = 0.2
 
     if "system_prompt" not in st.session_state:
-        st.session_state.system_prompt = SYSTEM_PROMPT
+        st.session_state.system_prompt = st.session_state.defaults.get("default_system_prompt", "")
 
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []

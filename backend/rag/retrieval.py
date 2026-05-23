@@ -35,7 +35,7 @@ def _get_embedder() -> SentenceTransformer:
     return _embedder
 
 
-def _get_qdrant() -> AsyncQdrantClient:
+def get_qdrant() -> AsyncQdrantClient:
     global _qdrant
     if _qdrant is None:
         _qdrant = AsyncQdrantClient(
@@ -54,7 +54,7 @@ async def _ensure_collection(collection: str) -> bool:
         return True
 
     try:
-        client = _get_qdrant()
+        client = get_qdrant()
         collections = await client.get_collections()
         names = [c.name for c in collections.collections]
 
@@ -98,7 +98,7 @@ async def search_docs(query: str, top_k: int = 5) -> list[str]:
             lambda: embedder.encode(query).tolist(),
         )
 
-        client = _get_qdrant()
+        client = get_qdrant()
         result = await client.query_points(
             collection_name=QDRANT_COLLECTION,
             query=vec,
